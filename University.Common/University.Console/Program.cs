@@ -1,72 +1,84 @@
 ﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using University.Common;
 
 namespace University.ConsoleApp
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            // Налаштування для коректного виводу українських літер
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-            Console.WriteLine("=== Демонстрація ООП моделі 'Університет' ===\n");
+            string filePath = "buses_data.json";
+            var service = new CrudServiceAsync<Bus>(filePath);
 
-            Student student1 = new Student("Олег", "Іванов", "КБ-21");
-            Student student2 = new Student("Анна", "Петрова", "КБ-21");
-            Teacher teacher1 = new Teacher("Марія", "Сидорова", "Програмування на C#");
+            Console.WriteLine("=== Завдання 3: Паралельне створення об'єктів ===");
+            Console.WriteLine("Починаємо паралельне створення 1000 автобусів...");
 
-            // Підписка на події
-            student1.OnAction += ActionNotification;
-            student2.OnAction += ActionNotification;
-            teacher1.OnAction += ActionNotification;
-
-            // Виклик методів (перевірка подій)
-            student1.Study();
-            teacher1.Teach();
-
-            Console.WriteLine($"\nУсього студентів створено (статичне поле): {Student.TotalStudents}");
-
-            string rawString = "основи ПРОГРАМУВАННЯ";
-            Console.WriteLine($"Сирий рядок: {rawString}");
-            Console.WriteLine($"Відформатований рядок (метод розширення): {rawString.ToTitleCase()}\n");
-
-            Console.WriteLine("=== Демонстрація CRUD сервісу ===");
-
-            ICrudService<Student> studentService = new CrudService<Student>();
-
-            studentService.Create(student1);
-            studentService.Create(student2);
-
-            Console.WriteLine("\nПоточний список студентів у сервісі:");
-            foreach (var s in studentService.ReadAll())
+            Parallel.For(0, 1000, i =>
             {
-                s.DisplayInfo();
-            }
+                var newBus = Bus.CreateNew();
+                service.CreateAsync(newBus).Wait();
+            });
 
-            Console.WriteLine("\nОновлення даних першого студента...");
-            studentService.Update(0, new Student("Олег", "Смірнов", "КБ-21"));
+            var allBuses = await service.ReadAllAsync();
+            Console.WriteLine($"Успішно створено та додано {allBuses.Count()} об'єктів у колекцію.\n");
 
-            Console.WriteLine("\n=== Демонстрація збереження та завантаження (JSON) ===");
-            string filePath = "students_data.json";
+            Console.WriteLine("=== LINQ: Статистика для цифрових значень ===");
 
-            studentService.Save(filePath);
+            var minSpeed = allBuses.Min(b => b.Speed);
+            var maxSpeed = allBuses.Max(b => b.Speed);
+            var avgSpeed = allBuses.Average(b => b.Speed);
+            Console.WriteLine($"Швидкість (км/год) -> Мін: {minSpeed}, Макс: {maxSpeed}, Середня: {avgSpeed:F2}");
 
-            ICrudService<Student> newService = new CrudService<Student>();
-            newService.Load(filePath);
+            var minCapacity = allBuses.Min(b => b.Capacity);
+            var maxCapacity = allBuses.Max(b => b.Capacity);
+            var avgCapacity = allBuses.Average(b => b.Capacity);
+            Console.WriteLine($"Місткість (пасажирів) -> Мін: {minCapacity}, Макс: {maxCapacity}, Середня: {avgCapacity:F2}\n");
 
-            Console.WriteLine("\nСтуденти, завантажені з файлу:");
-            foreach (var s in newService.ReadAll())
-            {
-                s.DisplayInfo();
-            }
+            Console.WriteLine("=== Збереження у файл ===");
+            await service.SaveAsync();
+            Console.WriteLine($"Згенеровану колекцію успішно збережено у файл: {filePath}\n");
 
-            Console.ReadLine();
+            Console.WriteLine("=== Завдання 4: Примітиви синхронізації ===");
+            DemoSyncPrimitives();
+
+            Console.WriteLine("\nРобота програми успішно завершена. Натисніть будь-яку клавішу...");
+            Console.ReadKey();
         }
 
-        static void ActionNotification(string message)
+        static void DemoSyncPrimitives()
         {
-            Console.WriteLine($"[СПОВІЩЕННЯ]: {message}");
+            Console.WriteLine("\n--- Демонстрація Lock ---");
+            object lockObj = new object();
+            int sharedCounter = 0;
+
+            Parallel.For(0, 5, i =>
+            {
+                lock (lockObj)
+                {
+                    sharedCounter++;
+                    Console.WriteLine($"Потік {Task.CurrentId} збільшив лічильник до {sharedCounter}");
+                }
+            });
+
+            Console.WriteLine("\n--- Демонстрація AutoResetEvent ---");
+            AutoResetEvent autoEvent = new AutoResetEvent(false);
+
+            Task.Run(() =>
+            {
+                Console.WriteLine("Побічний потік 1 чекає на дозвіл (сигнал)...");
+                autoEvent.WaitOne();
+                Console.WriteLine("Побічний потік 1 отримав сигнал і продовжив роботу!");
+            });
+
+            Thread.Sleep(1000);
+            Console.WriteLine("Головний потік надсилає сигнал для AutoResetEvent...");
+            autoEvent.Set();
+            Thread.Sleep(500);
         }
     }
 }
