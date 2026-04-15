@@ -1,96 +1,96 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using University.Common;
-using Xunit;
+//using system;
+//using system.linq;
+//using system.threading.tasks;
+//using university.common;
+//using xunit;
 
-namespace University.Tests
-{
-    public class CrudServiceAsyncTests
-    {
-        // Допоміжний метод для створення чистого сервісу для кожного тесту
-        private CrudServiceAsync<Bus> CreateService()
-        {
-            // Генеруємо унікальне ім'я файлу, щоб тести не перезаписували файли один одного
-            string tempFile = $"test_buses_{Guid.NewGuid()}.json";
-            return new CrudServiceAsync<Bus>(tempFile);
-        }
+//namespace university.tests
+//{
+//    public class crudserviceasynctests
+//    {
+//        // допоміжний метод для створення чистого сервісу для кожного тесту
+//        private crudserviceasync<bus> createservice()
+//        {
+//            // генеруємо унікальне ім'я файлу, щоб тести не перезаписували файли один одного
+//            string tempfile = $"test_buses_{guid.newguid()}.json";
+//            return new crudserviceasync<bus>(tempfile);
+//        }
 
-        [Fact]
-        public async Task CreateAsync_ShouldAddElement()
-        {
-            // Arrange (Підготовка)
-            var service = CreateService();
-            var bus = Bus.CreateNew();
+//        [fact]
+//        public async task createasync_shouldaddelement()
+//        {
+//            // arrange (підготовка)
+//            var service = createservice();
+//            var bus = bus.createnew();
 
-            // Act (Дія)
-            var result = await service.CreateAsync(bus);
-            var readBus = await service.ReadAsync(bus.Id);
+//            // act (дія)
+//            var result = await service.createasync(bus);
+//            var readbus = await service.readasync(bus.id);
 
-            // Assert (Перевірка)
-            Assert.True(result); // Перевіряємо, чи метод повернув true
-            Assert.NotNull(readBus); // Перевіряємо, чи об'єкт дійсно зберігся
-            Assert.Equal(bus.Id, readBus.Id);
-        }
+//            // assert (перевірка)
+//            assert.true(result); // перевіряємо, чи метод повернув true
+//            assert.notnull(readbus); // перевіряємо, чи об'єкт дійсно зберігся
+//            assert.equal(bus.id, readbus.id);
+//        }
 
-        [Fact]
-        public async Task ReadAsync_ShouldReturnNull_WhenElementDoesNotExist()
-        {
-            var service = CreateService();
+//        [fact]
+//        public async task readasync_shouldreturnnull_whenelementdoesnotexist()
+//        {
+//            var service = createservice();
 
-            // Шукаємо неіснуючий Guid
-            var result = await service.ReadAsync(Guid.NewGuid());
+//            // шукаємо неіснуючий guid
+//            var result = await service.readasync(guid.newguid());
 
-            // Має повернути null
-            Assert.Null(result);
-        }
+//            // має повернути null
+//            assert.null(result);
+//        }
 
-        [Fact]
-        public async Task UpdateAsync_ShouldModifyElement()
-        {
-            var service = CreateService();
-            var bus = Bus.CreateNew();
-            await service.CreateAsync(bus); // Спочатку додаємо
+//        [fact]
+//        public async task updateasync_shouldmodifyelement()
+//        {
+//            var service = createservice();
+//            var bus = bus.createnew();
+//            await service.createasync(bus); // спочатку додаємо
 
-            // Змінюємо дані
-            bus.Model = "Updated Bus Model";
+//            // змінюємо дані
+//            bus.model = "updated bus model";
 
-            var updateResult = await service.UpdateAsync(bus);
-            var updatedBus = await service.ReadAsync(bus.Id);
+//            var updateresult = await service.updateasync(bus);
+//            var updatedbus = await service.readasync(bus.id);
 
-            Assert.True(updateResult);
-            Assert.Equal("Updated Bus Model", updatedBus.Model); // Перевіряємо, чи змінилася модель
-        }
+//            assert.true(updateresult);
+//            assert.equal("updated bus model", updatedbus.model); // перевіряємо, чи змінилася модель
+//        }
 
-        [Fact]
-        public async Task RemoveAsync_ShouldDeleteElement()
-        {
-            var service = CreateService();
-            var bus = Bus.CreateNew();
-            await service.CreateAsync(bus); // Додаємо
+//        [fact]
+//        public async task removeasync_shoulddeleteelement()
+//        {
+//            var service = createservice();
+//            var bus = bus.createnew();
+//            await service.createasync(bus); // додаємо
 
-            var removeResult = await service.RemoveAsync(bus); // Видаляємо
-            var readBus = await service.ReadAsync(bus.Id); // Спробуємо знайти
+//            var removeresult = await service.removeasync(bus); // видаляємо
+//            var readbus = await service.readasync(bus.id); // спробуємо знайти
 
-            Assert.True(removeResult);
-            Assert.Null(readBus); // Об'єкт має бути null, бо ми його видалили
-        }
+//            assert.true(removeresult);
+//            assert.null(readbus); // об'єкт має бути null, бо ми його видалили
+//        }
 
-        [Fact]
-        public async Task ReadAllAsync_Pagination_ShouldReturnCorrectAmount()
-        {
-            var service = CreateService();
+//        [fact]
+//        public async task readallasync_pagination_shouldreturncorrectamount()
+//        {
+//            var service = createservice();
 
-            // Додаємо 10 автобусів
-            for (int i = 0; i < 10; i++)
-            {
-                await service.CreateAsync(Bus.CreateNew());
-            }
+//            // додаємо 10 автобусів
+//            for (int i = 0; i < 10; i++)
+//            {
+//                await service.createasync(bus.createnew());
+//            }
 
-            // Отримуємо 2-гу сторінку, по 3 елементи на сторінці (має повернути 3 елементи)
-            var pagedResult = await service.ReadAllAsync(page: 2, amount: 3);
+//            // отримуємо 2-гу сторінку, по 3 елементи на сторінці (має повернути 3 елементи)
+//            var pagedresult = await service.readallasync(page: 2, amount: 3);
 
-            Assert.Equal(3, pagedResult.Count());
-        }
-    }
-}
+//            assert.equal(3, pagedresult.count());
+//        }
+//    }
+//}

@@ -3,7 +3,7 @@
 namespace University.Common
 {
     // Клас реалізує IEntity, щоб гарантовано мати Guid Id для нашого сервісу
-    public class Bus : IEntity
+    public class Bus
     {
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Model { get; set; }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using University.Common;
+using University.Infrastructure;
+using University.Infrastructure.Models;
 
 namespace University.ConsoleApp
 {
@@ -12,73 +14,53 @@ namespace University.ConsoleApp
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-            string filePath = "buses_data.json";
-            var service = new CrudServiceAsync<Bus>(filePath);
+            Console.WriteLine("=== Лабораторна робота №3: Entity Framework Core ===");
 
-            Console.WriteLine("=== Завдання 3: Паралельне створення об'єктів ===");
-            Console.WriteLine("Починаємо паралельне створення 1000 автобусів...");
+            using var context = new UniversityContext();
 
-            Parallel.For(0, 1000, i =>
+            // Автоматичне створення бази та таблиць
+            await context.Database.MigrateAsync();
+
+            var busRepository = new UniversityRepository<BusModel>(context);
+
+            // ОСЬ ЦЕЙ РЯДОК ЗАГУБИВСЯ: Створюємо сервіс!
+            var busService = new CrudServiceAsync<BusModel>(busRepository);
+
+            Console.WriteLine("Генеруємо 5 автобусів для бази даних...");
+
+            // Створюємо 5 автобусів у циклі
+            for (int i = 1; i <= 5; i++)
             {
-                var newBus = Bus.CreateNew();
-                service.CreateAsync(newBus).Wait();
-            });
+                var bus = new BusModel
+                {
+                    Brand = $"Автобус-Бренд {i}",
+                    ModelName = $"Модель {i}00",
+                    Speed = 60 + (i * 10),
+                    Capacity = 20 + (i * 5),
+                    Driver = new DriverModel { Name = $"Водій {i}" }
+                };
 
-            var allBuses = await service.ReadAllAsync();
-            Console.WriteLine($"Успішно створено та додано {allBuses.Count()} об'єктів у колекцію.\n");
+                // Додаємо маршрути
+                bus.Routes.Add(new RouteModel { RouteName = $"Маршрут {i}-A" });
+                bus.Routes.Add(new RouteModel { RouteName = $"Маршрут {i}-B" });
 
-            Console.WriteLine("=== LINQ: Статистика для цифрових значень ===");
+                // Зберігаємо в базу
+                await busService.CreateAsync(bus);
+            }
 
-            var minSpeed = allBuses.Min(b => b.Speed);
-            var maxSpeed = allBuses.Max(b => b.Speed);
-            var avgSpeed = allBuses.Average(b => b.Speed);
-            Console.WriteLine($"Швидкість (км/год) -> Мін: {minSpeed}, Макс: {maxSpeed}, Середня: {avgSpeed:F2}");
+            Console.WriteLine("Усі 5 автобусів з водіями та маршрутами успішно додано до БД!");
 
-            var minCapacity = allBuses.Min(b => b.Capacity);
-            var maxCapacity = allBuses.Max(b => b.Capacity);
-            var avgCapacity = allBuses.Average(b => b.Capacity);
-            Console.WriteLine($"Місткість (пасажирів) -> Мін: {minCapacity}, Макс: {maxCapacity}, Середня: {avgCapacity:F2}\n");
+            // Читаємо з бази, щоб перевірити
+            var allBuses = await busService.ReadAllAsync();
+            Console.WriteLine($"\nЗагальна кількість автобусів у БД: {allBuses.Count()}");
 
-            Console.WriteLine("=== Збереження у файл ===");
-            await service.SaveAsync();
-            Console.WriteLine($"Згенеровану колекцію успішно збережено у файл: {filePath}\n");
-
-            Console.WriteLine("=== Завдання 4: Примітиви синхронізації ===");
-            DemoSyncPrimitives();
+            foreach (var b in allBuses)
+            {
+                Console.WriteLine($"- {b.Brand} {b.ModelName} (Швидкість: {b.Speed})");
+            }
 
             Console.WriteLine("\nРобота програми успішно завершена. Натисніть будь-яку клавішу...");
             Console.ReadKey();
-        }
-
-        static void DemoSyncPrimitives()
-        {
-            Console.WriteLine("\n--- Демонстрація Lock ---");
-            object lockObj = new object();
-            int sharedCounter = 0;
-
-            Parallel.For(0, 5, i =>
-            {
-                lock (lockObj)
-                {
-                    sharedCounter++;
-                    Console.WriteLine($"Потік {Task.CurrentId} збільшив лічильник до {sharedCounter}");
-                }
-            });
-
-            Console.WriteLine("\n--- Демонстрація AutoResetEvent ---");
-            AutoResetEvent autoEvent = new AutoResetEvent(false);
-
-            Task.Run(() =>
-            {
-                Console.WriteLine("Побічний потік 1 чекає на дозвіл (сигнал)...");
-                autoEvent.WaitOne();
-                Console.WriteLine("Побічний потік 1 отримав сигнал і продовжив роботу!");
-            });
-
-            Thread.Sleep(1000);
-            Console.WriteLine("Головний потік надсилає сигнал для AutoResetEvent...");
-            autoEvent.Set();
-            Thread.Sleep(500);
         }
     }
 }

@@ -1,103 +1,81 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace University.Common
 {
-    public class CrudServiceAsync<T> : ICrudServiceAsync<T> where T : IEntity
+    public class CrudServiceAsync<T> : ICrudServiceAsync<T> where T : class
     {
-        private readonly ConcurrentDictionary<Guid, T> _collection = new();
-        private readonly string _filePath;
+        private readonly IRepository<T> _repository;
 
-        private readonly SemaphoreSlim _fileSemaphore = new SemaphoreSlim(1, 1);
-
-        public CrudServiceAsync(string filePath)
+        // Впроваджуємо залежність через конструктор (Dependency Injection)
+        public CrudServiceAsync(IRepository<T> repository)
         {
-            _filePath = filePath;
+            _repository = repository;
         }
 
-        public Task<bool> CreateAsync(T element)
+        public async Task<bool> CreateAsync(T element)
         {
-            bool added = _collection.TryAdd(element.Id, element);
-            return Task.FromResult(added);
-        }
-
-        public Task<T> ReadAsync(Guid id)
-        {
-            _collection.TryGetValue(id, out var element);
-            return Task.FromResult(element); 
-        }
-
-        public Task<IEnumerable<T>> ReadAllAsync()
-        {
-            return Task.FromResult(_collection.Values.AsEnumerable());
-        }
-
-        public Task<IEnumerable<T>> ReadAllAsync(int page, int amount)
-        {
-            var pagedData = _collection.Values
-                .Skip((page - 1) * amount)
-                .Take(amount);
-
-            return Task.FromResult(pagedData);
-        }
-
-        public Task<bool> UpdateAsync(T element)
-        {
-            if (_collection.ContainsKey(element.Id))
-            {
-                _collection[element.Id] = element;
-                return Task.FromResult(true);
-            }
-            return Task.FromResult(false);
-        }
-
-        public Task<bool> RemoveAsync(T element)
-        {
-            bool removed = _collection.TryRemove(element.Id, out _);
-            return Task.FromResult(removed);
-        }
-
-        public async Task<bool> SaveAsync()
-        {
-            // Чекаємо, поки файл не звільниться від інших потоків
-            await _fileSemaphore.WaitAsync();
             try
             {
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                var json = JsonSerializer.Serialize(_collection.Values, options);
-
-                // Асинхронний запис у файл
-                await File.WriteAllTextAsync(_filePath, json);
+                await _repository.AddAsync(element);
                 return true;
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Помилка збереження у файл: {ex.Message}");
                 return false;
             }
-            finally
+        }
+
+        public async Task<T?> ReadAsync(Guid id)
+        {
+            return await _repository.GetByIdAsync(id);
+        }
+
+        public async Task<IEnumerable<T>> ReadAllAsync()
+        {
+            return await _repository.GetAllAsync();
+        }
+
+        public async Task<IEnumerable<T>> ReadAllAsync(int page, int amount)
+        {
+            var allData = await _repository.GetAllAsync();
+            return allData.Skip((page - 1) * amount).Take(amount);
+        }
+
+        public async Task<bool> UpdateAsync(T element)
+        {
+            try
             {
-                // Обов'язково звільняємо семафор, щоб інші потоки могли працювати
-                _fileSemaphore.Release();
+                await _repository.Update(element);
+                return true;
+            }
+            catch
+            {
+                return false;
             }
         }
 
-        // Реалізація інтерфейсу IEnumerable<T>
-        public IEnumerator<T> GetEnumerator()
+        public async Task<bool> RemoveAsync(T element)
         {
-            return _collection.Values.GetEnumerator();
+            try
+            {
+                await _repository.Delete(element);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        // В контексті EF Core SaveAsync часто не потрібен окремо, 
+        // бо SaveChangesAsync викликається всередині репозиторію. 
+        // Але ми залишаємо його для виконання інтерфейсу.
+        public Task<bool> SaveAsync()
         {
-            return GetEnumerator();
+            return Task.FromResult(true);
         }
     }
 }

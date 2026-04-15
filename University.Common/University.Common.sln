@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "University.Console", "Unive
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "University.Tests", "University.Tests\University.Tests.csproj", "{CA41220B-0A03-408C-9E41-7BFC09F0F07A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "University.Infrastructure", "University.Infrastructure\University.Infrastructure.csproj", "{3083F82D-344F-4B62-870E-4730EDA1CDD3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{CA41220B-0A03-408C-9E41-7BFC09F0F07A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA41220B-0A03-408C-9E41-7BFC09F0F07A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA41220B-0A03-408C-9E41-7BFC09F0F07A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3083F82D-344F-4B62-870E-4730EDA1CDD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3083F82D-344F-4B62-870E-4730EDA1CDD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3083F82D-344F-4B62-870E-4730EDA1CDD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3083F82D-344F-4B62-870E-4730EDA1CDD3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
