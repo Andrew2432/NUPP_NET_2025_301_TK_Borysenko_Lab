@@ -1,18 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // ДОДАНО: підключаємо Identity
 using University.Common;
 using University.Infrastructure.Models; // Підключаємо наші моделі
 
 namespace University.Infrastructure
 {
-    public class UniversityContext : DbContext
+    // ЗМІНЕНО: тепер наслідуємося від IdentityDbContext<AppUser> замість DbContext
+    public class UniversityContext : IdentityDbContext<AppUser>
     {
         public UniversityContext()
         {
         }
+
         // Цей конструктор потрібен для ASP.NET Core, щоб передавати налаштування
         public UniversityContext(DbContextOptions<UniversityContext> options) : base(options)
         {
         }
+
         public DbSet<Student> Students { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
         // Це таблиці (DbSet), які будуть створені в нашій базі даних
@@ -32,6 +36,7 @@ namespace University.Infrastructure
         // Налаштування зв'язків за допомогою пріоритетного Fluent API
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // Цей рядок обов'язково має бути першим, він генерує таблиці для логінів і паролів!
             base.OnModelCreating(modelBuilder);
 
             // === 1. Наслідування TPT (Table-per-Type) ===
