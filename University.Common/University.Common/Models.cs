@@ -15,6 +15,7 @@ namespace University.Common
         // 3. Подія
         public event PersonActionHandler OnAction;
 
+        public Person() { }
         // 4. Конструктор
         public Person(string firstName, string lastName)
         {
@@ -43,6 +44,8 @@ namespace University.Common
 
         public string StudentIdNumber { get; set; }
         public double AverageGrade { get; set; }
+
+        public Student() { }
 
         // 7. Статичний конструктор
         static Student()
@@ -75,6 +78,8 @@ namespace University.Common
     {
         public string Subject { get; set; }
         public int ExperienceYears { get; set; }
+
+        public Teacher() { }
 
         public Teacher(string firstName, string lastName, string subject)
             : base(firstName, lastName)

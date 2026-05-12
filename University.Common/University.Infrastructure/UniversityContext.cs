@@ -1,10 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using University.Common;
 using University.Infrastructure.Models; // Підключаємо наші моделі
 
 namespace University.Infrastructure
 {
     public class UniversityContext : DbContext
     {
+        public UniversityContext()
+        {
+        }
+        // Цей конструктор потрібен для ASP.NET Core, щоб передавати налаштування
+        public UniversityContext(DbContextOptions<UniversityContext> options) : base(options)
+        {
+        }
+        public DbSet<Student> Students { get; set; }
+        public DbSet<Teacher> Teachers { get; set; }
         // Це таблиці (DbSet), які будуть створені в нашій базі даних
         public DbSet<VehicleModel> Vehicles { get; set; }
         public DbSet<BusModel> Buses { get; set; }
